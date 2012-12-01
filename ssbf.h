@@ -6,7 +6,7 @@
 #include "bloom.h"
 
 #ifndef PROGRAM_NAME
-#define PROGRAM_NAME "ppgf"
+#define PROGRAM_NAME "ssbf"
 #endif
 
 #ifndef VERSION

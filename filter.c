@@ -7,7 +7,7 @@
 #include <getopt.h>
 #include "kseq.h"
 #include "bloom.h"
-#include "ppgf.h"
+#include "ssbf.h"
 
 KSEQ_INIT(gzFile, gzread)
 

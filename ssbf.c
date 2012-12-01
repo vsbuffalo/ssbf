@@ -4,7 +4,7 @@
 #include <string.h>
 #include <getopt.h>
 #include <zlib.h>
-#include "ppgf.h"
+#include "ssbf.h"
 
 extern int usage() {
   fprintf(stderr, "\n");

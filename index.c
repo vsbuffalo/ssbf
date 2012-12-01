@@ -9,7 +9,7 @@
 KSEQ_INIT(gzFile, gzread)
 
 extern int index_usage() {
-  fprintf(stderr, "\nusage: ppgf index <in.fasta>\n\n");
+  fprintf(stderr, "\nusage: %s index <in.fasta>\n\n", PROGRAM_NAME);
   fprintf(stderr, "options:     -b INT        number of bits (default 64)\n");
   fprintf(stderr, "             -k INT        k-mer size (default 33)\n");
   return EXIT_FAILURE;
