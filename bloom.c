@@ -29,7 +29,7 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include "ppgf.h"
+#include "ssbf.h"
 #include "bloom.h"
 
 #define SETBIT(a, n) (a[n/CHAR_BIT] |= (1<<(n%CHAR_BIT)))
@@ -63,8 +63,7 @@ unsigned int djb2_hash(const char *key) {
 bloom_t *bloom_init(size_t size, size_t nfuncs, ...) {
   int n;
   va_list args;
-  bloom_t *bloom = malloc(sizeof(bloom_t));
-  CHECK_MALLOC(bloom);
+  bloom_t *bloom = xmalloc(sizeof(bloom_t));
   bloom->hashfuncs = malloc(sizeof(hashfuncs_t)*nfuncs);
   bloom->bits = calloc((size+CHAR_BIT-1)/CHAR_BIT, sizeof(char));
   CHECK_MALLOC((bloom->hashfuncs && bloom->bits));
@@ -101,16 +100,16 @@ void bloom_add(bloom_t *bloom, const char *s) {
   }
 }
 
-int main(int argc, char *argv[]) {
-  /* testing functions */
-  int i;
-  bloom_t *bloom = bloom_init(1000, 4, sax_hash, fnv_hash, djb2_hash);
+/* int main(int argc, char *argv[]) { */
+/*   /\* testing functions *\/ */
+/*   int i; */
+/*   bloom_t *bloom = bloom_init(1000, 4, sax_hash, fnv_hash, djb2_hash); */
   
-  bloom_add(bloom, "in bloom filter");
-  bloom_add(bloom, "also in bloom filter");
+/*   bloom_add(bloom, "in bloom filter"); */
+/*   bloom_add(bloom, "also in bloom filter"); */
   
-  printf("test 1: %i\n", bloom_check(bloom, "in bloom filter"));
-  printf("test 2: %i\n", bloom_check(bloom, "also in bloom filter"));
-  printf("test 3: %i\n", bloom_check(bloom, "not in bloom filter"));
-  bloom_destroy(bloom);
-}
+/*   printf("test 1: %i\n", bloom_check(bloom, "in bloom filter")); */
+/*   printf("test 2: %i\n", bloom_check(bloom, "also in bloom filter")); */
+/*   printf("test 3: %i\n", bloom_check(bloom, "not in bloom filter")); */
+/*   bloom_destroy(bloom); */
+/* } */

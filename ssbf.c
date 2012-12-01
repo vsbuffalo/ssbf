@@ -6,6 +6,15 @@
 #include <zlib.h>
 #include "ssbf.h"
 
+void *xmalloc(size_t size) {
+  void *ret = malloc(size);
+  if (!ret) {
+    fprintf(stderr, "Out of memory, malloc failed");
+    exit(EXIT_FAILURE);
+  }
+  return(ret);
+}
+
 extern int usage() {
   fprintf(stderr, "\n");
   fprintf(stderr, "%s: streaming contaminant removal with bloom filters\n", PROGRAM_NAME);
@@ -24,12 +33,14 @@ int main(int argc, char *argv[]) {
     return usage();
   }
 
-  if (strcmp(argv[1], "index")) {
+  if (strcmp(argv[1], "index") == 0) {
       if (argc < 3)
         return index_usage();
-  } else if (strcmp(argv[1], "filter")) {
+      index_main(argc, argv);
+  } else if (strcmp(argv[1], "filter") == 0) {
       if (argc < 3)
         return filter_usage();
+      filter_main(argc, argv);
   } else {
     fprintf(stderr, "error: command must be either 'hash' or 'filter'.\n");
     return usage();

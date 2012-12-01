@@ -14,16 +14,20 @@
 #endif
 
 typedef struct {
+  unsigned int size;
   gzFile **files;
   char **filenames;
+  char **names;
   bloom_t **blooms;
 } bloom_list_t;
 
 int usage();
 
-
-int index_usage();
-int filter_usage();
+void *xmalloc(size_t size);
+extern int index_usage();
+extern int filter_usage();
+extern int index_main(int argc, char *argv[]);
+extern int filter_main(int argc, char *argv[]);
 
 #define CHECK_MALLOC(ptr)  if (!ptr) {                  \
     fprintf(stderr, "Out of memory; malloc failed\n");  \
