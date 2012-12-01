@@ -7,19 +7,21 @@
 
   Copyright (C) 2012 Vince Buffalo
 
-  This program is free software; you can redistribute it and/or
-  modify it under the terms of the GNU General Public License
-  as published by the Free Software Foundation; either version 2
-  of the License, or (at your option) any later version.
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
   
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
+  This program is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  General Public License for more details.
   
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+  02110-1301, USA.
+  
 */
 
 
@@ -27,7 +29,7 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <stdarg.h>
-
+#include "ppgf.h"
 #include "bloom.h"
 
 #define SETBIT(a, n) (a[n/CHAR_BIT] |= (1<<(n%CHAR_BIT)))
@@ -62,13 +64,10 @@ bloom_t *bloom_init(size_t size, size_t nfuncs, ...) {
   int n;
   va_list args;
   bloom_t *bloom = malloc(sizeof(bloom_t));
+  CHECK_MALLOC(bloom);
   bloom->hashfuncs = malloc(sizeof(hashfuncs_t)*nfuncs);
   bloom->bits = calloc((size+CHAR_BIT-1)/CHAR_BIT, sizeof(char));
-  
-  if (!(bloom && bloom->hashfuncs && bloom->bits)) {
-    fprintf(stderr, "Out of memory; malloc failed\n");
-    exit(EXIT_FAILURE);
-  }
+  CHECK_MALLOC((bloom->hashfuncs && bloom->bits));
 
   va_start(args, nfuncs);
   for(n=0; n<nfuncs; n++) {
@@ -113,6 +112,5 @@ int main(int argc, char *argv[]) {
   printf("test 1: %i\n", bloom_check(bloom, "in bloom filter"));
   printf("test 2: %i\n", bloom_check(bloom, "also in bloom filter"));
   printf("test 3: %i\n", bloom_check(bloom, "not in bloom filter"));
-  
   bloom_destroy(bloom);
 }

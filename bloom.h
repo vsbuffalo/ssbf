@@ -4,6 +4,7 @@
 typedef unsigned int (*hashfuncs_t) (const char *);
 
 typedef struct {
+  char *name;
   size_t size;
   size_t nhash;
   size_t nfuncs;
