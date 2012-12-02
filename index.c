@@ -34,7 +34,7 @@ void bloom_list_dump(bloom_list_t *bfilters) {
   
 }
 
-int bloom_list_write(const char *filename) {
+bloom_t *bloom_list_write(bloom_t *bloom, const char *filename) {
   int n=2;
   char *test = calloc(n, sizeof(char));
   strcpy(test, "aa");
@@ -50,7 +50,8 @@ int bloom_list_write(const char *filename) {
 
 bloom_t *create_bloom_filter(const gzFile ref_fp, const int k, const int b) {
   /* 
-     Create a bloom filter from a FASTA file.
+     Create a bloom filter of b bits, from k-mers of size k from FASTA
+     file entries.
   */
   bloom_t *bloom = bloom_init((size_t) b, NFUNCS, HASHFUNCS);
   kseq_t *seq;
@@ -87,9 +88,11 @@ int index_main(int argc, char *argv[]) {
 
   i = ++optind; /* remove subcommand */
   if (i == argc-1) {
-    printf ("Non-option argument %s\n", argv[i]);
+    ref_fp = gzopen(argv[i], "r");
+    fprintf(stderr, "[index] creating bloom filter for FASTA file %s...\t", argv[i]);
     bloom = create_bloom_filter(ref_fp, k, b);
-    bloom_list_write("test.bbf");
+    fprintf(stderr, "done\n", argv[i]);
+    bloom_list_write(bloom, "test.bbf");
   } else if (i < argc-1) {
     fprintf(stderr, "error: too many arguments provided\n");
     exit(EXIT_FAILURE);

@@ -16,7 +16,7 @@
 #ifndef DEFAULTS
 #define DEFAULTS
 #define KSIZE 33
-#define BITSIZE 64
+#define BITSIZE 64e20
 #define NUMKMERS 5
 #endif
 
