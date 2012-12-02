@@ -9,12 +9,14 @@
 #include "bloom.h"
 #include "ssbf.h"
 
+static int verbose_flag=0;
+
 /* KSEQ_INIT(gzFile, gzread) */
 
 static struct option long_options[] = {
-  {"k-size", required_argument, 0, 'k'},
+  {"num-kmers", required_argument, 0, 'n'},
   {"indices", required_argument, 0, 'i'},
-  {"verbose", required_argument, 0, 'v'},
+  {"verbose", required_argument, &verbose_flag, 'v'},
   {GETOPT_HELP_OPTION_DECL},
   {GETOPT_VERSION_OPTION_DECL},
   {NULL, 0, NULL, 0}
@@ -22,8 +24,8 @@ static struct option long_options[] = {
 
 extern int filter_usage() {
   fprintf(stderr, "\nUsage: ppgf filter <in.fasta>\n\n");
-  fprintf(stderr, "Options:     -k INT        number of k-mer matches for\n");
-  fprintf(stderr, "                           classification (default 5)\n");
+  fprintf(stderr, "Options:     -n INT        number of k-mer matches for\n");
+  fprintf(stderr, "                           classification (default %d)\n", NUMKMERS);
   fprintf(stderr, "             -i FILE(S)    binary indices of contaminants, in\n");
   fprintf(stderr, "                           format \"species_a=a.bbf,species_b=b.bbf\"\n");
   fprintf(stderr, "Arguments:   <in.fastx>    FASTA or FASTQ input file, '-' \n");
@@ -47,12 +49,11 @@ void load_bloom_filters(bloom_list_t *bfilters) {
   bfilters->files = xmalloc(sizeof(gzFile)*(bfilters->size));
   for (i=0; i < bfilters->size; i++) {
     bfilters->files[i] = gzopen(bfilters->filenames[i], "rb");
-    
   }
 }
 
 extern int filter_main(int argc, char *argv[]) {
-  int verbose=0, k=33, ni=0;
+  int n=NUMKMERS, ni=0;
   size_t len;
   int optc;
   char *subopts, *chunk, *scratch;
@@ -63,15 +64,12 @@ extern int filter_main(int argc, char *argv[]) {
 
   while (1) {
     int option_index=0;
-    optc = getopt_long(argc, argv, "vk:i:", long_options, &option_index);
+    optc = getopt_long(argc, argv, "vn:i:", long_options, &option_index);
     if (optc < 0) break;
     switch (optc) {
-      /* if (long_options[option_index].flag != 0) break; */
-    case 'v':
-      verbose = 1;
-      break;
-    case 'k':
-      k = atoi(optarg);
+      if (long_options[option_index].flag != 0) break;
+    case 'n':
+      n = atoi(optarg);
       break;
     case 'i':
       subopts = optarg;

@@ -13,6 +13,20 @@
 #define VERSION 0.1
 #endif
 
+#ifndef DEFAULTS
+#define DEFAULTS
+#define KSIZE 33
+#define BITSIZE 64
+#define NUMKMERS 5
+#endif
+
+/* definitions for our hash functions */
+#ifndef HASHFUNCS
+#define HASHFUNCS sax_hash_l, fnv_hash_l, djb2_hash_l
+#define NFUNCS 3
+#endif
+
+/* array structure for storing a list of bloom filters */
 typedef struct {
   unsigned int size;
   gzFile **files;
@@ -21,14 +35,16 @@ typedef struct {
   bloom_t **blooms;
 } bloom_list_t;
 
+/* function templates */
 int usage();
-
 void *xmalloc(size_t size);
 extern int index_usage();
 extern int filter_usage();
 extern int index_main(int argc, char *argv[]);
 extern int filter_main(int argc, char *argv[]);
 
+/* macro for checking (and exiting) if malloc returns null; use
+   xmallox mostly, this is for calloc, etc. */
 #define CHECK_MALLOC(ptr)  if (!ptr) {                  \
     fprintf(stderr, "Out of memory; malloc failed\n");  \
     exit(EXIT_FAILURE);                                 \
