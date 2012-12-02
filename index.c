@@ -43,10 +43,11 @@ int bloom_filter_write(bloom_t *bloom, FILE *output_fp) {
 
      Binary Bloom Filter (bbf) file:
 
-     [uint32_t size][uint32_t k][char MAX_NAME_SIZE][char * nchar bitfield]
+     [uint32_t size][uint32_t k][uint32_t nseqs][char MAX_NAME_SIZE][char * nchar bitfield]
   */
   fwrite(&bloom->size, sizeof(uint32_t), 1, output_fp);
   fwrite(&bloom->k, sizeof(uint32_t), 1, output_fp);
+  fwrite(&bloom->nseqs, sizeof(uint32_t), 1, output_fp);
   fwrite(bloom->name, sizeof(char), MAX_NAME_SIZE, output_fp);
   fwrite(bloom->bits, sizeof(char), sizeof(char)*bloom->nchar, output_fp);
   return 1;
@@ -73,6 +74,7 @@ bloom_t *bloom_filter_create(const gzFile ref_fp, const int k, const int b, char
     }
     if (verbose_flag && tot % 1000 == 0)
       fprintf(stderr, "\t%i sequences added to bloom filter\r", tot);
+    bloom->nseqs++;
   }
   kseq_destroy(seq);
   gzclose(ref_fp);
@@ -121,9 +123,8 @@ int index_main(int argc, char *argv[]) {
   i = ++optind; /* remove subcommand */
   if (i == argc-1) {
     ref_fp = gzopen(argv[i], "r");
-    fprintf(stderr, "[index] creating bloom filter for FASTA file %s...\t", argv[i]);
+    fprintf(stderr, "[index] creating bloom filter for FASTA file %s...\n", argv[i]);
     bloom = bloom_filter_create(ref_fp, k, b, name);
-    fprintf(stderr, "done.\n");
     fprintf(stderr, "[index] writing bloom filter '%s' to file '%s' "\
             "(k=%u, nchar=%u, bitsize=%u)\n", bloom->name, argv[i], bloom->k, \
             bloom->nchar, bloom->size);

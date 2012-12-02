@@ -5,15 +5,18 @@
 
 typedef unsigned int (*hashfuncs_t) (const char *, size_t len);
 
+/* fields to be written to binary file are fixed width */
 typedef struct {
-  uint32_t size;
-  size_t nhash;
-  size_t nfuncs;
-  uint32_t nchar;
-  uint32_t k;
-  hashfuncs_t *hashfuncs;
-  char *bits;
-  char *name;
+  uint32_t size; /* number of bits */
+  size_t nfuncs; /* number of hash functions */
+  uint32_t nchar; /* number of char-sized blocks used in creating bit
+                     field */
+  uint32_t k; /* k-mer size */
+  uint32_t nseqs; /* number of sequences in bloom filter */
+  hashfuncs_t *hashfuncs; /* hash functions; i.e. unsigned (char *key,
+                             size_t len) */
+  char *bits; /* bit field */
+  char *name; /* name metainformation (size=MAX_NAME_SIZE) */
 } bloom_t;
 
 

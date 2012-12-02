@@ -117,6 +117,8 @@ bloom_t *bloom_init(size_t size, size_t nfuncs, ...) {
   bloom->nfuncs = nfuncs;
   bloom->size = size;
   bloom->nchar = nchar;
+  bloom->k = 0;
+  bloom->nseqs = 0;
   return bloom;
 }
 

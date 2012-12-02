@@ -33,19 +33,17 @@ void load_bloom_filters(bloom_list_t *bfilters) {
     blocks. If needed, we could resize these.
   */
   int i;
-  uint32_t size, k, nchar;
+  uint32_t size, nchar;
   FILE *tmp_fp;
-  char name[MAX_NAME_SIZE];
   for (i=0; i < bfilters->size; i++) {
     tmp_fp = fopen(bfilters->filenames[i], "rb");
     fread(&size, sizeof(uint32_t), 1, tmp_fp);
     bfilters->blooms[0] = bloom_init(size, NFUNCS, HASHFUNCS);
-    fread(&k, sizeof(uint32_t), 1, tmp_fp);
-    bfilters->blooms[0]->k = k;
+    fread(&bfilters->blooms[0]->k, sizeof(uint32_t), 1, tmp_fp);
+    fread(&bfilters->blooms[0]->nseqs, sizeof(uint32_t), 1, tmp_fp);
     nchar = bfilters->blooms[0]->nchar;
     bfilters->blooms[0]->name = xmalloc(sizeof(char)*MAX_NAME_SIZE);
-    fread(&name, sizeof(char), MAX_NAME_SIZE, tmp_fp);
-    strcpy(bfilters->blooms[0]->name, name);
+    fread(bfilters->blooms[0]->name, sizeof(char), MAX_NAME_SIZE, tmp_fp);
     bfilters->blooms[0]->bits = xmalloc(sizeof(char)*nchar);
     memset(bfilters->blooms[0]->bits, 0, sizeof(char)*nchar);
     fread(bfilters->blooms[0]->bits, sizeof(char), nchar, tmp_fp);
@@ -86,7 +84,7 @@ unsigned int filter_reads(bloom_list_t *bfilters, FILE *input_fp, int n_kmer) {
 extern int filter_main(int argc, char *argv[]) {
   int n=NUMKMERS, ni=0, i;
   int optc;
-  FILE *input_fp=stdin;
+  gzFile input_fp;
   bloom_list_t *bfilters = xmalloc(sizeof(bloom_list_t));
   bfilters->size=0;
   bfilters->filenames = xmalloc(sizeof(char*)*(argc-1));
@@ -120,12 +118,19 @@ extern int filter_main(int argc, char *argv[]) {
 
   i = ++optind; /* remove subcommand */
   if (i == argc-1) {
-    input_fp = gzopen(argv[i], "r");
+    input_fp = (strcmp(argv[i], "-") == 0) ? gzdopen(fileno(stdin), "r") : gzopen(argv[i], "r");
+    if (!input_fp)
+      fprintf(stderr, "error: could open file '%s'\n", argv[i]);
+  } else if (i < argc-1) {
+    fprintf(stderr, "error: too many arguments provided\n");
+    exit(EXIT_FAILURE);
+  } else {
+    fprintf(stderr, "error: no FASTA file provided; to use stdin, specify '-'\n");
+    exit(EXIT_FAILURE);
   }
 
-  fprintf(stderr, "[filter] filtering reads...\t");
+  fprintf(stderr, "[filter] filtering reads...\n");
   filter_reads(bfilters, input_fp, n);
-  fprintf(stderr, "done.\n");
   
   /* filter reads */
   return EXIT_SUCCESS;

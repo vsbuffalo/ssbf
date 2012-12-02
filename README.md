@@ -4,6 +4,9 @@
 
  - remove `files` from `bloom_list_t`?
  - hash of bits for validation?
+ - move create/load binary functions to sequence bloom library 
+ - valgrind; write destroy methods
+ - iterate through filters in parallel
 
 ## GDB Tips
 
