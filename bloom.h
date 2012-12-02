@@ -1,15 +1,32 @@
 #ifndef BLOOM_H
 #define BLOOM_H
 
+#include <stdint.h>
+
 typedef unsigned int (*hashfuncs_t) (const char *, size_t len);
 
+#ifdef FORZOID
 typedef struct {
   size_t size;
   size_t nhash;
   size_t nfuncs;
+  uint32_t nchar;
+  uint32_t k;
+  hashfuncs_t *hashfuncs;
+  char *bits;
+  char *name;
+} bloom_t;
+#else
+typedef struct {
+  size_t size;
+  size_t nhash;
+  size_t nfuncs;
+  uint32_t nchar;
   hashfuncs_t *hashfuncs;
   char *bits;
 } bloom_t;
+#endif
+
 
 void *xmalloc(size_t size);
 unsigned int sax_hash(const char *key);

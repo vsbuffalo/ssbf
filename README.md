@@ -1,5 +1,9 @@
 # zoid -- streaming sequence bloom filter for contaminant removal
 
+## TODO
+
+ - remove `files` from `bloom_list_t`?
+
 ## GDB Tips
 
 If you would like to look at bits in the bit field in GDB, `x\1000t

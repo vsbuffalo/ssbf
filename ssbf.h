@@ -1,5 +1,21 @@
 #ifndef PPGF_H
 #define PPGF_H
+
+/* For bloom.h - changes bloom_t slightly so that there is k-mer size
+   (k) field as well as the bitsize field; these are necessaary to
+   read the binary file. This is to increase portability; a BBF file
+   should have all necessary parameters to run correctly (without the
+   user having to recall and specify those. */
+
+#define FORZOID
+
+#include <getopt.h>
+#include <libgen.h>
+#include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
 #include <zlib.h>
 #include <limits.h>
 #include "kseq.h"
@@ -26,12 +42,15 @@
 #define NFUNCS 3
 #endif
 
+/* maximum size of names (must be fixed width for binary file
+   handling)*/
+#define MAX_NAME_SIZE 60
+
 /* array structure for storing a list of bloom filters */
 typedef struct {
   unsigned int size;
   gzFile **files;
   char **filenames;
-  char **names;
   bloom_t **blooms;
 } bloom_list_t;
 

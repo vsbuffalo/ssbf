@@ -91,6 +91,14 @@ unsigned int djb2_hash_l(const char *key, size_t len) {
 /* bloom filter functions */
 
 bloom_t *bloom_init(size_t size, size_t nfuncs, ...) {
+  /*
+    Initialize a bloom_t type, allocating a bitfield. If we wish to
+    allocate `size` bitfield, we do so in CHAR-sized (8 bits) sized
+    blocks. 
+
+    Adding CHAR_BIT-1 to the size ensures we'll always have an extra
+    block (this takes care of remander bits).
+  */
   int n;
   va_list args;
   bloom_t *bloom = xmalloc(sizeof(bloom_t));
@@ -105,12 +113,16 @@ bloom_t *bloom_init(size_t size, size_t nfuncs, ...) {
   va_end(args);
   bloom->nfuncs = nfuncs;
   bloom->size = size;
+  bloom->nchar = (size+CHAR_BIT-1)/CHAR_BIT;
   return bloom;
 }
 
 void bloom_destroy(bloom_t *bloom) {
   free(bloom->bits);
   free(bloom->hashfuncs);
+#ifdef FORZOID
+  free(bloom->name);
+#endif
   free(bloom);
 }
 
