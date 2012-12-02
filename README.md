@@ -3,6 +3,7 @@
 ## TODO
 
  - remove `files` from `bloom_list_t`?
+ - hash of bits for validation?
 
 ## GDB Tips
 

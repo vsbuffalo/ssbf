@@ -25,12 +25,13 @@
 */
 
 
+#include <assert.h>
 #include <stdio.h>
 #include <limits.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include "ssbf.h"
 #include "bloom.h"
+#include "ssbf.h"
 
 #define SETBIT(a, n) (a[n/CHAR_BIT] |= (1<<(n%CHAR_BIT)))
 #define GETBIT(a, n) (a[n/CHAR_BIT] & (1<<(n%CHAR_BIT)))
@@ -100,10 +101,12 @@ bloom_t *bloom_init(size_t size, size_t nfuncs, ...) {
     block (this takes care of remander bits).
   */
   int n;
+  uint32_t nchar=(size+CHAR_BIT-1)/CHAR_BIT;
   va_list args;
   bloom_t *bloom = xmalloc(sizeof(bloom_t));
+  assert(nchar < UINT32_MAX);
   bloom->hashfuncs = xmalloc(sizeof(hashfuncs_t)*nfuncs);
-  bloom->bits = calloc((size+CHAR_BIT-1)/CHAR_BIT, sizeof(char));
+  bloom->bits = calloc(nchar, sizeof(char));
   CHECK_MALLOC((bloom->hashfuncs && bloom->bits));
 
   va_start(args, nfuncs);
@@ -113,16 +116,14 @@ bloom_t *bloom_init(size_t size, size_t nfuncs, ...) {
   va_end(args);
   bloom->nfuncs = nfuncs;
   bloom->size = size;
-  bloom->nchar = (size+CHAR_BIT-1)/CHAR_BIT;
+  bloom->nchar = nchar;
   return bloom;
 }
 
 void bloom_destroy(bloom_t *bloom) {
   free(bloom->bits);
   free(bloom->hashfuncs);
-#ifdef FORZOID
   free(bloom->name);
-#endif
   free(bloom);
 }
 
@@ -150,14 +151,15 @@ int main(int argc, char *argv[]) {
   int i;
   char *test_str = "this is a test string";
   char *test_substr = "this";
-  bloom_t *bloom = bloom_init(1000, 4, 0, sax_hash, fnv_hash, djb2_hash);
+  bloom_t *bloom = bloom_init(1000, 3, sax_hash_l, fnv_hash_l, djb2_hash_l);
   
-  bloom_add(bloom, "in bloom filter");
-  bloom_add(bloom, "also in bloom filter");
+  bloom_add(bloom, "in bloom filter", 15);
+  bloom_add(bloom, "also in bloom filter", 20);
   
-  printf("test 1: %i\n", bloom_check(bloom, "in bloom filter"));
-  printf("test 2: %i\n", bloom_check(bloom, "also in bloom filter"));
-  printf("test 3: %i\n", bloom_check(bloom, "not in bloom filter"));
+  printf("test 1: %i\n", bloom_check(bloom, "in bloom filter", 15));
+  printf("test 2: %i\n", bloom_check(bloom, "also in bloom filter", 20));
+  printf("test 3: %i\n", bloom_check(bloom, "not in bloom filter", 19));
+  printf("test 4: %i\n", bloom_check(bloom, "in bloom filter", 14));
   bloom_destroy(bloom);
 
   printf("sax_hash: %u\n", sax_hash(test_substr));

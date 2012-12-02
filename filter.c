@@ -2,7 +2,7 @@
 
 static int verbose_flag=0;
 
-/* KSEQ_INIT(gzFile, gzread) */
+KSEQ_INIT(gzFile, gzread)
 
 static struct option long_options[] = {
   {"num-kmers", required_argument, 0, 'n'},
@@ -32,27 +32,55 @@ void load_bloom_filters(bloom_list_t *bfilters) {
     the bloom filters. This is an over allocation by at most two
     blocks. If needed, we could resize these.
   */
-  int i, k[1], nchar[1];
+  int i;
+  uint32_t size, k, nchar;
   FILE *tmp_fp;
-  bfilters->blooms = xmalloc(sizeof(bloom_t)*(bfilters->size));
+  char name[MAX_NAME_SIZE];
   for (i=0; i < bfilters->size; i++) {
     tmp_fp = fopen(bfilters->filenames[i], "rb");
-    bfilters->blooms[0] = xmalloc(sizeof(bloom_t));
+    fread(&size, sizeof(uint32_t), 1, tmp_fp);
+    bfilters->blooms[0] = bloom_init(size, NFUNCS, HASHFUNCS);
+    fread(&k, sizeof(uint32_t), 1, tmp_fp);
+    bfilters->blooms[0]->k = k;
+    nchar = bfilters->blooms[0]->nchar;
     bfilters->blooms[0]->name = xmalloc(sizeof(char)*MAX_NAME_SIZE);
-
-    fread(nchar, sizeof(uint32_t), 1, tmp_fp);
-    bfilters->blooms[0]->nchar = *nchar;
-    fread(k, sizeof(uint32_t), 1, tmp_fp);
-    bfilters->blooms[0]->k = *k;
-    fread(bfilters->blooms[0]->name, sizeof(char), MAX_NAME_SIZE, tmp_fp);
-    bfilters->blooms[0]->bits = xmalloc(sizeof(char) * (size_t) *nchar);
-    fread(bfilters->blooms[0]->bits, sizeof(char), *nchar, tmp_fp);
-    printf("nchar: %u\n", *nchar);
+    fread(&name, sizeof(char), MAX_NAME_SIZE, tmp_fp);
+    strcpy(bfilters->blooms[0]->name, name);
+    bfilters->blooms[0]->bits = xmalloc(sizeof(char)*nchar);
+    memset(bfilters->blooms[0]->bits, 0, sizeof(char)*nchar);
+    fread(bfilters->blooms[0]->bits, sizeof(char), nchar, tmp_fp);
+    fprintf(stderr, "[filter] loaded bloom filter '%s' (k=%u, nchar=%u, bitsize=%u)\n", \
+            bfilters->blooms[0]->name, bfilters->blooms[0]->k, bfilters->blooms[0]->nchar, \
+            bfilters->blooms[0]->size);
   }
 }
 
-size_t filter_reads(bloom_list_t *bfilters, FILE *input_fp) {
-  printf("match: %u\n", bloom_check(bfilters->blooms[0], "GGTAZZZZZTTCGCTGCTGGGGTCGCTATCGGTGTGCACTGCATGATGACAGGTATCGACCCGCGCCTCTCTAACCTAGGGGGGCTCTGGGCGCTCGGGACT", 33));
+unsigned int filter_reads(bloom_list_t *bfilters, FILE *input_fp, int n_kmer) {
+  kseq_t *seq;
+  int i, k, l;
+  unsigned int nremoved=0, n;
+  seq = kseq_init(input_fp);
+  k = bfilters->blooms[0]->k;
+  while ((l = kseq_read(seq)) >= 0) {
+    n = 0;
+    /* hash all k-mers */
+    for (i=0; i < seq->seq.l-k; i++) {
+      n += bloom_check(bfilters->blooms[0], seq->seq.s+i, k);
+    }
+    if (n < n_kmer) {
+      if (seq->comment.l > 0)
+         fprintf(stdout, ">%s %s\n%s\n", seq->name.s, seq->comment.s, seq->seq.s);
+      else
+        fprintf(stdout, ">%s\n%s\n", seq->name.s, seq->seq.s);
+    } else {
+      if (verbose_flag)
+        fprintf(stderr, "'%s' had %d k-mer matches\n", seq->name.s, n);
+      nremoved++;
+    }
+  }
+  kseq_destroy(seq);
+  gzclose(input_fp);
+  return nremoved;
 }
 
 extern int filter_main(int argc, char *argv[]) {
@@ -61,8 +89,8 @@ extern int filter_main(int argc, char *argv[]) {
   FILE *input_fp=stdin;
   bloom_list_t *bfilters = xmalloc(sizeof(bloom_list_t));
   bfilters->size=0;
-  bfilters->filenames = xmalloc(sizeof(bloom_t)*(argc-1));
-
+  bfilters->filenames = xmalloc(sizeof(char*)*(argc-1));
+  bfilters->blooms = xmalloc(sizeof(bloom_t*)*(argc-1));
   while (1) {
     int option_index=0;
     optc = getopt_long(argc, argv, "vn:i:", long_options, &option_index);
@@ -74,6 +102,7 @@ extern int filter_main(int argc, char *argv[]) {
       break;
     case 'i':
       bfilters->filenames[ni] = xmalloc(sizeof(char)*strlen(optarg));
+      bfilters->blooms[ni] = xmalloc(sizeof(bloom_t));
       strcpy(bfilters->filenames[ni], optarg);
       bfilters->size++;
       break;
@@ -86,12 +115,16 @@ extern int filter_main(int argc, char *argv[]) {
   }
 
   /* take filenames and load their binary bff files' data */
-  fprintf(stderr, "[filter] loading bloom filters...\t");
+  fprintf(stderr, "[filter] loading bloom filters...\n");
   load_bloom_filters(bfilters);
-  fprintf(stderr, "done.\n");
+
+  i = ++optind; /* remove subcommand */
+  if (i == argc-1) {
+    input_fp = gzopen(argv[i], "r");
+  }
 
   fprintf(stderr, "[filter] filtering reads...\t");
-  filter_reads(bfilters, input_fp);
+  filter_reads(bfilters, input_fp, n);
   fprintf(stderr, "done.\n");
   
   /* filter reads */

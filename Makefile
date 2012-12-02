@@ -23,7 +23,7 @@ filter: filter.o bloom.o index.o ssbf.o
 index: index.o bloom.o ssbf.o filter.o
 	$(CC) $(CFLAGS) $(LDFLAGS) $? -o index
 
-bloom: bloom.o
+bloom: bloom.o $(SDIR)/ssbf.h
 	$(CC) $(CFLAGS) $(LDFLAGS) $? -o bloom
 
 clean:

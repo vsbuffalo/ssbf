@@ -20,7 +20,7 @@ static struct option long_options[] = {
 
 extern int index_usage() {
   fprintf(stderr, "\nUsage: %s index <in.fasta>\n\n", PROGRAM_NAME);
-  fprintf(stderr, "Options:     -b INT        number of bits (default %f)\n", BITSIZE);
+  fprintf(stderr, "Options:     -b INT        number of bits (default %d)\n", BITSIZE);
   fprintf(stderr, "             -k INT        k-mer size (default %d)\n", KSIZE);
   fprintf(stderr, "             -o FILE       output file (default stdout)\n");
   fprintf(stderr, "             -n STR        name\n");
@@ -43,10 +43,9 @@ int bloom_filter_write(bloom_t *bloom, FILE *output_fp) {
 
      Binary Bloom Filter (bbf) file:
 
-     [uint32_t nchar][uint32_t k][char MAX_NAME_SIZE][char * nchar bitfield]
+     [uint32_t size][uint32_t k][char MAX_NAME_SIZE][char * nchar bitfield]
   */
-  printf("nchar: %u\n", &bloom->nchar);
-  fwrite(&bloom->nchar, sizeof(uint32_t), 1, output_fp);
+  fwrite(&bloom->size, sizeof(uint32_t), 1, output_fp);
   fwrite(&bloom->k, sizeof(uint32_t), 1, output_fp);
   fwrite(bloom->name, sizeof(char), MAX_NAME_SIZE, output_fp);
   fwrite(bloom->bits, sizeof(char), sizeof(char)*bloom->nchar, output_fp);
@@ -64,6 +63,7 @@ bloom_t *bloom_filter_create(const gzFile ref_fp, const int k, const int b, char
   bloom->k = k;
   bloom->size = b;
   bloom->name = xmalloc(sizeof(char)*MAX_NAME_SIZE);
+  memset(bloom->name, 0, sizeof(char)*MAX_NAME_SIZE);
   strcpy(bloom->name, name);
   seq = kseq_init(ref_fp);
   while ((l = kseq_read(seq)) >= 0) {
@@ -124,10 +124,12 @@ int index_main(int argc, char *argv[]) {
     fprintf(stderr, "[index] creating bloom filter for FASTA file %s...\t", argv[i]);
     bloom = bloom_filter_create(ref_fp, k, b, name);
     fprintf(stderr, "done.\n");
-    fprintf(stderr, "[index] writing bloom filter to file %s...\t", argv[i]);
+    fprintf(stderr, "[index] writing bloom filter '%s' to file '%s' "\
+            "(k=%u, nchar=%u, bitsize=%u)\n", bloom->name, argv[i], bloom->k, \
+            bloom->nchar, bloom->size);
+
     if (!bloom_filter_write(bloom, output_fp))
       fprintf(stderr, "error: could not write binary file\n");
-    fprintf(stderr, "done.\n");
   } else if (i < argc-1) {
     fprintf(stderr, "error: too many arguments provided\n");
     exit(EXIT_FAILURE);
