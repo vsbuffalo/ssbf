@@ -27,13 +27,14 @@ int main(int argc, char *argv[]) {
   if (strcmp(argv[1], "index") == 0) {
       if (argc < 3)
         return index_usage();
-      index_main(argc, argv);
+      return index_main(argc, argv);
   } else if (strcmp(argv[1], "filter") == 0) {
       if (argc < 3)
         return filter_usage();
-      filter_main(argc, argv);
+      return filter_main(argc, argv);
   } else {
-    fprintf(stderr, "error: command must be either 'hash' or 'filter'.\n");
+    fprintf(stderr, "error: command must be either 'index' or 'filter':\n");
+    fprintf(stderr, "  '%s' is not a valid subcommand\n", argv[1]);
     return usage();
   }
   return 0;

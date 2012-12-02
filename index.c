@@ -7,6 +7,10 @@
 #include "kseq.h"
 #include "bloom.h"
 
+/* TODO don't repeat */
+#define SETBIT(a, n) (a[n/CHAR_BIT] |= (1<<(n%CHAR_BIT)))
+#define GETBIT(a, n) (a[n/CHAR_BIT] & (1<<(n%CHAR_BIT)))
+
 KSEQ_INIT(gzFile, gzread)
 static int verbose_flag=0;
 
@@ -26,7 +30,25 @@ extern int index_usage() {
   return EXIT_FAILURE;
 }
 
-void create_bloom_filter(const gzFile ref_fp, const int k, const int b) {
+void bloom_list_dump(bloom_list_t *bfilters) {
+  
+}
+
+int bloom_list_write(const char *filename) {
+  int n=2;
+  char *test = calloc(n, sizeof(char));
+  strcpy(test, "aa");
+  SETBIT(test, 1);
+  SETBIT(test, 10);
+  FILE *file = fopen(filename, "wb");
+  if (!file) {
+    fprintf(stderr, "Could not open file '%s' for writing\n", filename);
+    exit(EXIT_FAILURE);
+  }
+  fwrite(test, sizeof(char), n*sizeof(char), file);
+}
+
+bloom_t *create_bloom_filter(const gzFile ref_fp, const int k, const int b) {
   /* 
      Create a bloom filter from a FASTA file.
   */
@@ -44,9 +66,10 @@ void create_bloom_filter(const gzFile ref_fp, const int k, const int b) {
   gzclose(ref_fp);
 }
 
-extern int index_main(int argc, char *argv[]) {
-  int optc, k=KSIZE, b=BITSIZE;
+int index_main(int argc, char *argv[]) {
+  int i, optc, k=KSIZE, b=BITSIZE;
   gzFile ref_fp=NULL;
+  bloom_t *bloom;
   while (1) {
     int option_index=0;
     optc = getopt_long(argc, argv, "vb:k:", long_options, &option_index);
@@ -61,9 +84,18 @@ extern int index_main(int argc, char *argv[]) {
       break;
     }
   }
-  /* TODO assert only ONE argument provided */
-  if (optind < argc) {
-    create_bloom_filter(ref_fp, k, b);
+
+  i = ++optind; /* remove subcommand */
+  if (i == argc-1) {
+    printf ("Non-option argument %s\n", argv[i]);
+    bloom = create_bloom_filter(ref_fp, k, b);
+    bloom_list_write("test.bbf");
+  } else if (i < argc-1) {
+    fprintf(stderr, "error: too many arguments provided\n");
+    exit(EXIT_FAILURE);
+  } else {
+    fprintf(stderr, "error: no FASTA file provided\n");
+    exit(EXIT_FAILURE);
   }
   return EXIT_SUCCESS;
 }

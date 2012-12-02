@@ -132,27 +132,29 @@ void bloom_add(bloom_t *bloom, const char *s, size_t len) {
   }
 }
 
-/* int main(int argc, char *argv[]) { */
-/*   /\* testing functions *\/ */
-/*   int i; */
-/*   char *test_str = "this is a test string"; */
-/*   char *test_substr = "this"; */
-/*   bloom_t *bloom = bloom_init(1000, 4, 0, sax_hash, fnv_hash, djb2_hash); */
+#ifdef TEST
+int main(int argc, char *argv[]) {
+  /* testing functions */
+  int i;
+  char *test_str = "this is a test string";
+  char *test_substr = "this";
+  bloom_t *bloom = bloom_init(1000, 4, 0, sax_hash, fnv_hash, djb2_hash);
   
-/*   bloom_add(bloom, "in bloom filter"); */
-/*   bloom_add(bloom, "also in bloom filter"); */
+  bloom_add(bloom, "in bloom filter");
+  bloom_add(bloom, "also in bloom filter");
   
-/*   printf("test 1: %i\n", bloom_check(bloom, "in bloom filter")); */
-/*   printf("test 2: %i\n", bloom_check(bloom, "also in bloom filter")); */
-/*   printf("test 3: %i\n", bloom_check(bloom, "not in bloom filter")); */
-/*   bloom_destroy(bloom); */
+  printf("test 1: %i\n", bloom_check(bloom, "in bloom filter"));
+  printf("test 2: %i\n", bloom_check(bloom, "also in bloom filter"));
+  printf("test 3: %i\n", bloom_check(bloom, "not in bloom filter"));
+  bloom_destroy(bloom);
 
-/*   printf("sax_hash: %u\n", sax_hash(test_substr)); */
-/*   printf("sax_hash_l: %u\n", sax_hash_l(test_str, 4)); */
+  printf("sax_hash: %u\n", sax_hash(test_substr));
+  printf("sax_hash_l: %u\n", sax_hash_l(test_str, 4));
 
-/*   printf("fnv_hash: %u\n", fnv_hash(test_substr)); */
-/*   printf("fnv_hash_l: %u\n", fnv_hash_l(test_str, 4)); */
+  printf("fnv_hash: %u\n", fnv_hash(test_substr));
+  printf("fnv_hash_l: %u\n", fnv_hash_l(test_str, 4));
 
-/*   printf("djb2_hash: %u\n", djb2_hash(test_substr)); */
-/*   printf("djb2_hash_l: %u\n", djb2_hash_l(test_str, 4)); */
-/* } */
+  printf("djb2_hash: %u\n", djb2_hash(test_substr));
+  printf("djb2_hash_l: %u\n", djb2_hash_l(test_str, 4));
+}
+#endif
