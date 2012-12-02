@@ -37,7 +37,6 @@ typedef struct {
 
 /* function templates */
 int usage();
-void *xmalloc(size_t size);
 extern int index_usage();
 extern int filter_usage();
 extern int index_main(int argc, char *argv[]);

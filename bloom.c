@@ -90,20 +90,17 @@ unsigned int djb2_hash_l(const char *key, size_t len) {
 
 /* bloom filter functions */
 
-bloom_t *bloom_init(size_t size, size_t nfuncs, int use_l, ...) {
+bloom_t *bloom_init(size_t size, size_t nfuncs, ...) {
   int n;
   va_list args;
   bloom_t *bloom = xmalloc(sizeof(bloom_t));
-  bloom->hashfuncs = malloc(sizeof(hashfuncs_l_t)*nfuncs);
+  bloom->hashfuncs = xmalloc(sizeof(hashfuncs_t)*nfuncs);
   bloom->bits = calloc((size+CHAR_BIT-1)/CHAR_BIT, sizeof(char));
   CHECK_MALLOC((bloom->hashfuncs && bloom->bits));
 
   va_start(args, nfuncs);
   for(n=0; n<nfuncs; n++) {
-    if (use_l)
-      bloom->hashfuncs[n]=va_arg(args, hashfuncs_l_t);
-    else
-      bloom->hashfuncs[n]=va_arg(args, hashfuncs_t);
+    bloom->hashfuncs[n]=va_arg(args, hashfuncs_t);
   }
   va_end(args);
   bloom->nfuncs = nfuncs;
@@ -117,35 +114,16 @@ void bloom_destroy(bloom_t *bloom) {
   free(bloom);
 }
 
-int bloom_check(bloom_t *bloom, const char *s) {
+int bloom_check(bloom_t *bloom, const char *s, size_t len) {
   size_t n;
   for(n=0; n<bloom->nfuncs; n++) {
-    if (!(GETBIT(bloom->bits, bloom->hashfuncs[n](s)%bloom->size)))p
+    if (!(GETBIT(bloom->bits, bloom->hashfuncs[n](s, len)%bloom->size)))
       return 0;
   }
   return 1;
 }
 
-int bloom_check_l(bloom_t *bloom, const char *s, size_t len) {
-  size_t n;
-  unsigned int hashed;
-  for(n=0; n<bloom->nfuncs; n++) {
-    hashed = bloom->hashfuncs[n](s, len)%bloom->size;
-    if (!(GETBIT(bloom->bits, hashed)))
-      return 0;
-  }
-  return 1;
-}
-
-
-void bloom_add(bloom_t *bloom, const char *s) {
-  size_t n;
-  for(n=0; n<bloom->nfuncs; ++n) {
-    SETBIT(bloom->bits, bloom->hashfuncs[n](s)%bloom->size);
-  }
-}
-
-void bloom_add_l(bloom_t *bloom, const char *s, size_t len) {
+void bloom_add(bloom_t *bloom, const char *s, size_t len) {
   size_t n;
   unsigned int hashed;
   for(n=0; n<bloom->nfuncs; ++n) {

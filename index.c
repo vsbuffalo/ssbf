@@ -26,18 +26,18 @@ extern int index_usage() {
   return EXIT_FAILURE;
 }
 
-void create_bloom_filter(const gzFile *ref_fp, const int k, const int b) {
+void create_bloom_filter(const gzFile ref_fp, const int k, const int b) {
   /* 
      Create a bloom filter from a FASTA file.
   */
-  bloom_t *bloom = bloom_init((size_t) b, NFUNCS, 1, HASHFUNCS);
+  bloom_t *bloom = bloom_init((size_t) b, NFUNCS, HASHFUNCS);
   kseq_t *seq;
   int l, i;
   seq = kseq_init(ref_fp);
   while ((l = kseq_read(seq)) >= 0) {
     /* hash all k-mers */
-    for (i=0; i < seq.l-k; i++) {
-      bloom_add_l(bloom, seq.seq.s[i], k);
+    for (i=0; i < seq->seq.l-k; i++) {
+      bloom_add(bloom, seq->seq.s+i, k);
     }
   }
   kseq_destroy(seq);
@@ -63,7 +63,7 @@ extern int index_main(int argc, char *argv[]) {
   }
   /* TODO assert only ONE argument provided */
   if (optind < argc) {
-    
+    create_bloom_filter(ref_fp, k, b);
   }
   return EXIT_SUCCESS;
 }

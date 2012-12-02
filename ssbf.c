@@ -6,15 +6,6 @@
 #include <zlib.h>
 #include "ssbf.h"
 
-void *xmalloc(size_t size) {
-  void *ret = malloc(size);
-  if (!ret) {
-    fprintf(stderr, "Out of memory, malloc failed");
-    exit(EXIT_FAILURE);
-  }
-  return(ret);
-}
-
 extern int usage() {
   fprintf(stderr, "\n");
   fprintf(stderr, "%s: streaming contaminant removal with bloom filters\n", PROGRAM_NAME);
