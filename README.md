@@ -1,4 +1,8 @@
-# zoid -- streaming sequence bloom filter for contaminant removal
+# streaming sequence bloom filter for contaminant removal
+
+Note: This was an experimental bloom filter sequence contaminant
+remover I made, mostly to play around with C and bloom filters. Feel
+free to hack and play around with; licensed under GPL.
 
 ## TODO
 
@@ -12,12 +16,5 @@
 
 If you would like to look at bits in the bit field in GDB, `x\1000t
 bloom->bits` works well.
-
-## FAQ
-
-**Why is it named "zoid"?**
-
-Why not Zoid(berg)[?](http://en.wikipedia.org/wiki/Futurama)
-
 
 
